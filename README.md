@@ -1,31 +1,56 @@
-# Productivity Dashboard Starter
+# 🧠 Productivity Dashboard Starter
 
-Project structure
-1. frontend  React app built with Vite
-2. backend   Flask API with a /chat endpoint
-3. docker-compose.yml  to run both together
+This project provides a complete **AI-powered productivity dashboard** setup using **React (Vite)** for the frontend and **Flask** for the backend.
 
-Local quick start without Docker
-1. Backend
-   a. cd backend
-   b. python -m venv .venv
-   c. source .venv/bin/activate  Windows use .venv\Scripts\activate
-   d. pip install -r requirements.txt
-   e. python app.py
-2. Frontend
-   a. cd frontend
-   b. npm install
-   c. npm run dev
-   d. Open http  localhost 5173
+---
 
-Run with Docker
-1. Install Docker Desktop
-2. In the project root run
-   docker compose up --build
-3. Open http  localhost 5173
+## 📁 Project Structure
 
-Next steps
-1. Replace the placeholder chatbot logic in backend app.py with OpenAI calls
-2. Add routes for weather news calendar github
-3. Store minimal preferences in localStorage
-4. Write simple tests for the chat endpoint
+| Folder / File | Description |
+|----------------|-------------|
+| **frontend/** | React application built with Vite |
+| **backend/** | Flask API exposing endpoints (e.g., `/chat`) |
+| **docker-compose.yml** | Orchestrates both services for local development |
+
+---
+
+## ⚙️ Local Quick Start (without Docker)
+
+### 🧩 Backend Setup
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python app.py
+```
+
+### ⚛️ Frontend Setup
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Then open 👉 **http://localhost:5173** in your browser.
+
+---
+
+## 🐳 Run with Docker
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+
+### Run Command
+
+```bash
+docker compose up --build
+```
+
+Then open 👉 **http://localhost:5173** in your browser.
+
+---
+
+✅ Both services (React + Flask) will run automatically via Docker Compose.
