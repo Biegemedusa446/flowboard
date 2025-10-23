@@ -1,4 +1,5 @@
 import os
+import time
 import requests
 from datetime import datetime
 from flask import Flask, request, jsonify, redirect, session
@@ -8,7 +9,9 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
+# =====================================================
 # --- Load environment variables ---
+# =====================================================
 load_dotenv()
 
 # --- Flask App Setup ---
@@ -18,20 +21,29 @@ CORS(
     resources={r"/*": {"origins": "http://localhost:5173"}},
     supports_credentials=True
 )
-
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "super-secret-key-change-this")
 
+# =====================================================
 # --- Environment Variables ---
+# =====================================================
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 GITHUB_USER = os.getenv("GITHUB_USER")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-CLIENT_SECRETS_FILE = os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "credentials.json")
-GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI")
+CLIENT_SECRETS_FILE = os.getenv("GOOGLE_CLIENT_SECRETS_FILE", "backend/credentials.json")
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:5000/oauth2callback")
 GOOGLE_SCOPES = os.getenv("GOOGLE_SCOPES", "https://www.googleapis.com/auth/calendar.readonly").split(",")
 
+# --- Validate credentials path ---
+if not os.path.exists(CLIENT_SECRETS_FILE):
+    print(f"⚠️ WARNING: Google credentials file not found at '{CLIENT_SECRETS_FILE}'")
+if not GEMINI_API_KEY:
+    print("⚠️ WARNING: GEMINI_API_KEY missing from environment.")
+if not WEATHER_API_KEY:
+    print("⚠️ WARNING: WEATHER_API_KEY missing from environment.")
+
 # =====================================================
-# --- Gemini Chat Endpoint
+# --- Gemini Chat Endpoint with Retry Logic
 # =====================================================
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -42,48 +54,66 @@ def chat():
     if not user_message:
         return jsonify({"reply": "Please type something so I can help."})
 
-    # maintain chat history in session
     session.setdefault("chat_history", [])
     session["chat_history"].extend(history)
 
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
+    headers = {
+        "Content-Type": "application/json",
+        "X-goog-api-key": GEMINI_API_KEY
+    }
+
+    # --- Updated system prompt ---
+    system_prompt = (
+        "You are Flowboard AI, a concise productivity/chat assistant. "
+        "Always reply in short, clear sentences or bullet points. "
+        "Avoid long essays. Keep responses under 5 sentences unless explicitly asked. "
+        "If listing, use simple dashes (- item) instead of Markdown stars. "
+        "Whenever you suggest an actionable activity or task (something the user can do, schedule, or complete), "
+        "append the marker ' §add' at the end of that line. "
+        "Do not add this marker to greetings, explanations, or normal responses."
+    )
+
+    contents = [{"role": "user", "parts": [{"text": system_prompt}]}]
+    for msg in session["chat_history"]:
+        role = "user" if msg["role"] == "user" else "model"
+        contents.append({"role": role, "parts": [{"text": msg["text"]}]})
+    payload = {"contents": contents}
+
+    # --- Retry logic for transient errors ---
+    MAX_RETRIES = 3
+    for attempt in range(MAX_RETRIES):
+        try:
+            response = requests.post(url, headers=headers, json=payload, timeout=15)
+            response.raise_for_status()
+            data = response.json()
+            break
+        except requests.exceptions.RequestException as e:
+            status_code = getattr(e.response, "status_code", None)
+            print(f"⚠️ Gemini API error (attempt {attempt + 1}): {e}")
+            if status_code == 503 and attempt < MAX_RETRIES - 1:
+                time.sleep(2 ** attempt)
+                continue
+            elif status_code == 401:
+                return jsonify({"reply": "🔒 Invalid or expired Gemini API key."}), 401
+            else:
+                return jsonify({"reply": "⚠️ The AI service is currently unavailable. Please try again later."}), 503
+    else:
+        return jsonify({"reply": "Sorry, I'm having trouble connecting to the AI service. Try again soon!"}), 500
+
+    # --- Parse reply ---
     try:
-        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
-        headers = {
-            "Content-Type": "application/json",
-            "X-goog-api-key": GEMINI_API_KEY
-        }
-
-        system_prompt = (
-            "You are Flowboard AI, a concise productivity/chat assistant. "
-            "Always reply in short, clear sentences or bullet points. "
-            "Avoid long essays. Keep responses under 5 sentences unless explicitly asked. "
-            "If listing, use simple dashes (- item) instead of Markdown stars."
-        )
-
-        # Build full message sequence
-        contents = [{"role": "user", "parts": [{"text": system_prompt}]}]
-        for msg in session["chat_history"]:
-            role = "user" if msg["role"] == "user" else "model"
-            contents.append({"role": role, "parts": [{"text": msg["text"]}]})
-
-        payload = {"contents": contents}
-
-        response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status()
-        data = response.json()
-
         reply = (
             data.get("candidates", [{}])[0]
                 .get("content", {})
                 .get("parts", [{}])[0]
                 .get("text", "No reply")
         )
+    except Exception:
+        reply = "Sorry, I couldn’t understand the response from the AI service."
 
-        session["chat_history"].append({"role": "model", "text": reply})
-        return jsonify({"reply": reply})
-
-    except Exception as e:
-        return jsonify({"reply": f"Error: {str(e)}"}), 500
+    session["chat_history"].append({"role": "model", "text": reply})
+    return jsonify({"reply": reply})
 
 
 # =====================================================
@@ -100,7 +130,6 @@ def get_weather():
         response = requests.get(url)
         response.raise_for_status()
         data = response.json()
-
         if "days" in data:
             data["days"] = data["days"][:days]
         return jsonify(data)
@@ -122,7 +151,6 @@ def github_events():
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         data = response.json()
-
         events = []
         for ev in data[:10]:
             repo = ev.get("repo", {}).get("name")
@@ -161,7 +189,6 @@ def login_google():
     session["state"] = state
     return redirect(auth_url)
 
-
 @app.route("/oauth2callback")
 def oauth2callback():
     flow = Flow.from_client_secrets_file(
@@ -182,12 +209,10 @@ def oauth2callback():
     }
     return redirect("http://localhost:5173")
 
-
 @app.route("/api/calendar")
 def get_calendar():
     if "credentials" not in session:
         return jsonify({"events": [], "auth": False})
-
     creds = Credentials(**session["credentials"])
     try:
         service = build("calendar", "v3", credentials=creds)
@@ -215,12 +240,10 @@ def get_calendar():
     except Exception as e:
         return jsonify({"error": str(e), "events": [], "auth": False}), 500
 
-
 @app.route("/api/calendar/add", methods=["POST"])
 def add_calendar_event():
     if "credentials" not in session:
         return jsonify({"auth": False, "error": "Not logged in"}), 401
-
     creds = Credentials(**session["credentials"])
     try:
         data = request.get_json(force=True)
@@ -248,4 +271,5 @@ if __name__ == "__main__":
     port = int(os.getenv("FLASK_RUN_PORT", 5000))
     debug = os.getenv("FLASK_DEBUG", "True").lower() == "true"
 
+    print(f"🚀 Starting Flask on http://{host}:{port}")
     app.run(host=host, port=port, debug=debug)

@@ -1,52 +1,101 @@
+/* === Base Container === */
 .ai-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
   background: #121212;
   color: white;
+  font-family: 'Inter', sans-serif;
 }
 
+/* === Chat Area === */
 .chat-box {
   flex: 1;
   overflow-y: auto;
-  padding: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
 }
 
+/* === Messages === */
 .msg {
   max-width: 70%;
-  margin-bottom: 10px;
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: 12px 16px;
+  border-radius: 16px;
   line-height: 1.4;
+  word-wrap: break-word;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  animation: fadeInUp 0.3s ease both;
+  transition: all 0.3s ease;
 }
 
 .msg.user {
-  align-self: flex-end;
   background: #4a90e2;
-  color: white;
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  align-self: flex-end;
 }
 
 .msg.ai {
-  align-self: flex-start;
   background: #2c2c3e;
   color: #f1f1f1;
+  border-bottom-left-radius: 4px;
+  align-self: flex-start;
 }
 
+/* === AI Typing Animation === */
+.typing {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: flex-start;
+  height: 20px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: #bbb;
+  border-radius: 50%;
+  animation: blink 1.4s infinite both;
+}
+.dot:nth-child(2) { animation-delay: 0.2s; }
+.dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+  0%, 100% { opacity: 0.3; }
+  20% { opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* === Chat Input === */
 .chat-input {
   display: flex;
-  padding: 12px;
+  padding: 14px;
   background: #1e1e2f;
   border-top: 1px solid #333;
+  gap: 10px;
 }
 
 .chat-input input {
   flex: 1;
-  padding: 10px;
+  padding: 12px;
   border: none;
   border-radius: 8px;
-  margin-right: 8px;
   background: #2c2c3e;
   color: white;
+  font-size: 15px;
+  transition: background 0.3s ease;
+}
+.chat-input input:focus {
+  outline: none;
+  background: #34344a;
 }
 
 .chat-input button {
@@ -56,19 +105,23 @@
   border-radius: 8px;
   cursor: pointer;
   color: white;
+  font-weight: 500;
+  transition: background 0.3s ease, transform 0.1s;
 }
-.ai-list {
-  margin: 4px 0;
-  padding-left: 20px;
+.chat-input button:hover {
+  background: #5b55e3;
+  transform: translateY(-1px);
 }
-.ai-list li {
-  margin-bottom: 4px;
-}
-.ai-list {
-  margin: 4px 0;
-  padding-left: 20px;
+.chat-input button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
+/* === AI List Items (with Add Buttons) === */
+.ai-list {
+  margin: 6px 0;
+  padding-left: 20px;
+}
 .ai-list li {
   margin-bottom: 6px;
   display: flex;
@@ -78,16 +131,118 @@
 
 .add-btn {
   margin-left: 10px;
-  padding: 2px 6px;
+  padding: 3px 8px;
   font-size: 12px;
   border: none;
   border-radius: 6px;
   background: #4f46e5;
   color: white;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background 0.2s, transform 0.1s;
 }
-
 .add-btn:hover {
   background: #3730a3;
+  transform: scale(1.05);
+}
+
+/* === Scrollbar Styling === */
+.chat-box::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-box::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 3px;
+}
+
+/* === Modal Overlay === */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  animation: fadeIn 0.3s ease;
+}
+
+/* === Modal Box === */
+.modal {
+  background: #1e1e2f;
+  padding: 20px;
+  border-radius: 12px;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  animation: popIn 0.3s ease;
+}
+
+.modal h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #fff;
+}
+
+.modal p {
+  margin: 0;
+  color: #bbb;
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+/* === Modal Inputs === */
+.modal label {
+  font-size: 14px;
+  color: #ccc;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal input {
+  margin-top: 4px;
+  padding: 8px;
+  border-radius: 6px;
+  border: none;
+  background: #2c2c3e;
+  color: white;
+}
+
+/* === Modal Buttons === */
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.modal-buttons button {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: #4f46e5;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.modal-buttons button:hover {
+  background: #3730a3;
+  transform: scale(1.03);
+}
+
+/* === Animations === */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
