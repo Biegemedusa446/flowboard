@@ -22,68 +22,13 @@ The project also supports **automated deployment** via **GitHub Actions** and **
 ### 🏗 Architecture  
 | Layer | Technology | Purpose |
 |-------|-------------|----------|
-| Frontend | React (Vite) | Dashboard UI |
+| Frontend | React (Vite) |
 | Backend | Flask (Python) | API aggregation and business logic |
-| Database | Session-based | Lightweight caching |
-| AI | Google Gemini API | Chat assistant |
-| Calendar | Google Calendar API | Event management |
-| Deployment | GitHub Actions + Netlify | Continuous delivery |
-| Auth | OAuth 2.0 | Google login integration |
+| AI | Google Gemini API |
+| Calendar | Google Calendar API |
 </details>  
 
 ---
-
-<details>
-<summary><strong>🛠 Jobs in the Workflow</strong></summary>  
-
-### ✅ Build, Test, and Deploy  
-This workflow automates dependency installation, build verification, code quality checks, and Netlify deployment.  
-
-#### 🔹 Steps:  
-1. **Checkout Code:**  
-   - Uses the `actions/checkout@v3` action to clone the repository.  
-
-2. **Install Dependencies:**  
-   - Installs both frontend and backend dependencies using `npm install` and `pip install`.  
-
-3. **Build Frontend:**  
-   - Executes `npm run build` inside the `frontend` directory to generate a production build.  
-
-4. **Run Backend Tests (Optional):**  
-   - Placeholder for unit tests or Flask endpoint verification.  
-
-5. **Upload Build Artifact:**  
-   - Uses `actions/upload-artifact@v4` to store the frontend build output for deployment.  
-
-6. **Deploy to Netlify:**  
-   - Automatically deploys to Netlify using a build hook or `South-Paw/action-netlify-deploy@v1.2.0`.  
-
-</details>  
-
----
-
-<details>
-<summary><strong>🚀 Deployment Pipeline</strong></summary>  
-
-This CI/CD pipeline automates the process of deploying Flowboard to Netlify after each successful build.  
-
-#### 🔹 Steps:  
-1. **Trigger:**  
-   - Runs on push or pull requests to the `main` or `staging` branches.  
-
-2. **Build Artifact Download:**  
-   - Retrieves the frontend build files from GitHub Actions.  
-
-3. **Set Environment Variables:**  
-   - Configures Netlify environment settings dynamically based on the branch.  
-
-4. **Netlify Deployment:**  
-   - Deploys the production build using the **Netlify Auth Token** and **Site ID** stored as GitHub Secrets.  
-
-</details>  
-
----
-
 <details>
 <summary><strong>🔐 Security Considerations</strong></summary>  
 
@@ -101,7 +46,6 @@ This CI/CD pipeline automates the process of deploying Flowboard to Netlify afte
 - Node.js ≥ 18  
 - Python ≥ 3.10  
 - Docker (optional, for containerized runs)  
-- Netlify account with build hook configured  
 - Google OAuth credentials (`credentials.json`) for Calendar API  
 - Visual Crossing and Gemini API keys  
 
@@ -123,7 +67,7 @@ This CI/CD pipeline automates the process of deploying Flowboard to Netlify afte
      ```bash
      cd backend
      python -m venv .venv
-     source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+     source .venv/bin/activate
      pip install -r requirements.txt
      python app.py
      ```  
@@ -139,11 +83,6 @@ This CI/CD pipeline automates the process of deploying Flowboard to Netlify afte
    ```bash
    docker compose up --build
    ```  
-
-4. **CI/CD Deployment:**  
-   - Push commits to `main` or `staging` to trigger GitHub Actions.  
-   - Monitor progress in the repository’s **Actions** tab.  
-   - Verify live deployment on **Netlify**.  
 
 </details>  
 
@@ -166,6 +105,5 @@ This CI/CD pipeline automates the process of deploying Flowboard to Netlify afte
 - Ensure all required secrets are correctly configured in your GitHub repository.  
 - If CORS errors appear, confirm that frontend and backend origins match.  
 - Re-generate and refresh your Google OAuth credentials if token errors occur.  
-- For deployment issues, verify Netlify site IDs and tokens in GitHub Secrets.  
 
 </details>  
