@@ -8,14 +8,14 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0 --port 5173",
     "prettier": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,scss,html,json}\""
-
   },
   "dependencies": {
     "dayjs": "^1.11.11",
     "prettier": "^3.6.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.9.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
