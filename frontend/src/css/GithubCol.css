@@ -1,0 +1,33 @@
+.github-card {
+  background: #1e1e2f;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  transition:
+    transform 0.2s ease,
+    background 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.github-card:hover {
+  transform: translateY(-3px);
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pill {
+  background: #24292f;
+  color: #f5f5f5;
+  font-size: 0.75rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.muted {
+  color: #aaa;
+  font-size: 0.85rem;
+}

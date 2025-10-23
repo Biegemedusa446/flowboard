@@ -1,0 +1,48 @@
+/* Scrollable container */
+.tasks-container {
+  max-height: 630px; /* match WeatherCol */
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Cards */
+.task-card {
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  background: #2c2c3e;
+  color: #f5f5f5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+.task-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Layout */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Tags */
+.pill {
+  font-size: 0.75rem;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+.tag-blue {
+  background: #2196f3;
+  color: white;
+}
+.tag-green {
+  background: #4caf50;
+  color: white;
+}
+
+/* Muted text */
+.muted {
+  color: #b0b0b0;
+  font-size: 0.85rem;
+}

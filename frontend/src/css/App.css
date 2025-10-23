@@ -1,0 +1,22 @@
+/* Base column */
+.column {
+  flex: 1;
+  border-radius: 12px;
+  padding: 12px;
+  color: #fff;
+}
+
+/* Weather column (blue gradient) */
+.weather-col {
+  background: linear-gradient(160deg, #5787b1, #2c3e50);
+}
+
+/* Tasks column (neutral gray/green) */
+.tasks-col {
+  background: linear-gradient(160deg, #2e2e38, #3c3c47);
+}
+
+/* GitHub column (dark GitHub style) */
+.github-col {
+  background: linear-gradient(160deg, #24292e, #2f363d);
+}

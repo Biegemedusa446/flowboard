@@ -1,0 +1,32 @@
+# --- Environment & Credentials ---
+.env
+credentials.json
+
+# --- Python Cache ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# --- Virtual Environments ---
+venv/
+env/
+.venv/
+
+# --- Logs ---
+*.log
+*.tmp
+*.bak
+
+# --- OS / Editor Files ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# --- Docker ---
+*.pid
+*.seed
+*.tar

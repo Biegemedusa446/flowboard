@@ -1,0 +1,141 @@
+/* Container */
+.weather-container {
+  max-height: 700px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+/* Card */
+.weather-card {
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+  transition: transform 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.weather-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Layout */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Text */
+.kpi {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+.muted {
+  font-size: 0.85rem;
+}
+
+/* ICONS */
+.icon {
+  font-size: 1.6rem;
+}
+.icon.sun {
+  color: #ffcc00;
+}
+.icon.cloud {
+  color: #444;
+}
+.icon.rain {
+  color: #cce7ff;
+}
+.icon.snow {
+  color: #2c3e50;
+}
+.icon.night {
+  color: #fffacd;
+}
+.icon.svg {
+  width: 28px;
+  height: 28px;
+  display: inline-block;
+}
+
+/* --- Condition Gradients --- */
+.weather-card.sun {
+  background: linear-gradient(135deg, #f7971e, #ffd200); /* warm yellow */
+  color: #000;
+}
+.weather-card.cloud {
+  background: linear-gradient(135deg, #757f9a, #d7dde8); /* bluish grey */
+  color: #000;
+}
+.weather-card.rain {
+  background: linear-gradient(135deg, #00c6ff, #0072ff); /* aqua-blue */
+  color: #fff;
+}
+.weather-card.snow {
+  background: linear-gradient(135deg, #e0eafc, #cfdef3); /* icy blue */
+  color: #000;
+}
+.weather-card.night {
+  background: linear-gradient(135deg, #141e30, #243b55); /* deep night */
+  color: #d0d8ff;
+}
+
+/* Muted text contrast */
+.weather-card.sun .muted,
+.weather-card.cloud .muted,
+.weather-card.snow .muted {
+  color: rgba(0, 0, 0, 0.7);
+}
+.weather-card.rain .muted,
+.weather-card.night .muted {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Buttons */
+.btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: #2c2c3e;
+  color: #fff;
+  transition: background 0.2s ease;
+}
+.btn:hover {
+  background: #3d3d52;
+}
+
+/* Condition-based button accents */
+.btn.accent.sun {
+  background: #f7971e;
+  color: #000;
+}
+.btn.accent.cloud {
+  background: #757f9a;
+  color: #fff;
+}
+.btn.accent.rain {
+  background: #0072ff;
+  color: #fff;
+}
+.btn.accent.snow {
+  background: #83a4d4;
+  color: #000;
+}
+.btn.accent.night {
+  background: #243b55;
+  color: #d0d8ff;
+}
+
+/* Default accent (fallback) */
+.btn.accent {
+  background: #6c63ff;
+  color: #fff;
+}
