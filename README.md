@@ -22,10 +22,12 @@ The project also supports **automated deployment** via **GitHub Actions** and **
 ### 🏗 Architecture  
 | Layer | Technology | Purpose |
 |-------|-------------|----------|
-| Frontend | React (Vite) |
+| Frontend | React (Vite) | Dashboard UI |
 | Backend | Flask (Python) | API aggregation and business logic |
-| AI | Google Gemini API |
-| Calendar | Google Calendar API |
+| Database | Session-based | Lightweight caching |
+| AI | Google Gemini API | Chat assistant |
+| Calendar | Google Calendar API | Event management |
+| Auth | OAuth 2.0 | Google login integration |
 </details>  
 
 ---
