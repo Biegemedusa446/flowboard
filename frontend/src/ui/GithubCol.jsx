@@ -1,59 +1,82 @@
 import React, { useEffect, useState } from 'react'
-import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
-import { FaGithub } from 'react-icons/fa'
 import '../css/GithubCol.css'
-
-dayjs.extend(relativeTime)
 
 export default function GithubCol({ apiBase }) {
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
   useEffect(() => {
-    let cancelled = false
-
     async function load() {
       try {
-        setLoading(true)
-        setError(null)
-
-        const res = await fetch(`http://localhost:5000/api/github`)
-        if (!res.ok) throw new Error(`Backend error: ${res.status}`)
-
+        const res = await fetch(`${apiBase}/api/github`)
         const json = await res.json()
-        if (!cancelled) setEvents(json.events || [])
+        setEvents(json || [])
       } catch (e) {
         console.error('GitHub fetch failed', e)
-        if (!cancelled) setError('Could not load GitHub events')
       } finally {
-        if (!cancelled) setLoading(false)
+        setLoading(false)
       }
     }
-
     load()
-    return () => {
-      cancelled = true
-    }
   }, [apiBase])
+
+  function formatTime(iso) {
+    const diffMs = Date.now() - new Date(iso).getTime()
+    const mins = Math.floor(diffMs / 60000)
+    if (mins < 1) return 'Just now'
+    if (mins < 60) return `${mins}m ago`
+    const hrs = Math.floor(mins / 60)
+    if (hrs < 24) return `${hrs}h ago`
+    const days = Math.floor(hrs / 24)
+    return `${days}d ago`
+  }
+
+  function renderEvent(ev) {
+    const action = ev.action
+    if (!action) return <div>Unknown event</div>
+
+    switch (action.type) {
+      case 'PushEvent':
+        return (
+          <div>
+            <div>
+              Pushed {action.commit_count} commit
+              {action.commit_count !== 1 && 's'} to <strong>{action.branch}</strong>
+            </div>
+            {action.commit_messages?.length > 0 && (
+              <ul className="commit-list">
+                {action.commit_messages.slice(0, 3).map((msg, i) => (
+                  <li key={i}>– {msg}</li>
+                ))}
+                {action.commit_messages.length > 3 && (
+                  <li className="muted">…and more</li>
+                )}
+              </ul>
+            )}
+          </div>
+        )
+
+      case 'IssuesEvent':
+      case 'PullRequestEvent':
+      case 'PublicEvent':
+        return <div>{action.detail}</div>
+
+      default:
+        return <div>{action.type}</div>
+    }
+  }
 
   if (loading)
     return (
-      <div className="github-card">
-        <div className="muted">Loading GitHub…</div>
+      <div className="card">
+        <div className="muted">Loading GitHub activity…</div>
       </div>
     )
-  if (error)
-    return (
-      <div className="github-card">
-        <div className="muted">{error}</div>
-      </div>
-    )
+
   if (!events.length)
     return (
-      <div className="github-card">
-        <div className="muted">No GitHub activity</div>
+      <div className="card">
+        <div className="muted">No recent activity</div>
       </div>
     )
 
@@ -63,14 +86,19 @@ export default function GithubCol({ apiBase }) {
         <div key={ev.id} className="github-card">
           <div className="row">
             <div>
-              <strong>{ev.repo}</strong>
-              <div className="muted">{dayjs(ev.time).fromNow()}</div>
+              <strong>{ev.action.repo}</strong>
+              <div className="muted">{formatTime(ev.created_at)}</div>
             </div>
-            <span className="pill">
-              <FaGithub style={{ marginRight: 4 }} /> GitHub
-            </span>
+            <a
+              href={`https://github.com/${ev.action.repo}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="pill"
+            >
+              <i className="fab fa-github"></i> GitHub
+            </a>
           </div>
-          <div style={{ marginTop: 8 }}>{ev.action}</div>
+          <div style={{ marginTop: '8px' }}>{renderEvent(ev)}</div>
         </div>
       ))}
     </div>

@@ -151,27 +151,53 @@ def github_events():
         response = requests.get(url, headers=headers)
         response.raise_for_status()
         data = response.json()
+
         events = []
         for ev in data[:10]:
-            repo = ev.get("repo", {}).get("name")
             etype = ev.get("type")
-            time = ev.get("created_at")
+            repo_name = ev.get("repo", {}).get("name", "Unknown repo")
+            created_at = ev.get("created_at")
+            payload = ev.get("payload", {})
 
+            action = {"type": etype, "repo": repo_name}
+
+            # --- Handle PushEvent with commit details ---
             if etype == "PushEvent":
-                action = f"Pushed {len(ev['payload'].get('commits', []))} commits"
-            elif etype == "IssuesEvent":
-                action = f"Issue {ev['payload'].get('action')} #{ev['payload'].get('issue', {}).get('number')}"
-            elif etype == "PullRequestEvent":
-                action = f"PR {ev['payload'].get('action')} #{ev['payload'].get('number')}"
-            else:
-                action = etype
+                branch = payload.get("ref", "").replace("refs/heads/", "")
+                commits = payload.get("commits", [])
+                commit_messages = [c.get("message", "") for c in commits]
 
-            events.append({"repo": repo, "action": action, "time": time})
+                # If GitHub trimmed commits, fetch latest commits for that branch
+                if not commit_messages and repo_name and branch:
+                    try:
+                        commits_url = f"https://api.github.com/repos/{repo_name}/commits?sha={branch}&per_page=3"
+                        commits_res = requests.get(commits_url, headers=headers)
+                        commits_res.raise_for_status()
+                        commits_data = commits_res.json()
+                        commit_messages = [c["commit"]["message"] for c in commits_data[:3]]
+                    except Exception as fetch_err:
+                        print(f"⚠️ Could not fetch commits for {repo_name}/{branch}: {fetch_err}")
 
-        return jsonify({"events": events})
+                action.update({
+                    "branch": branch,
+                    "commit_count": len(commit_messages),
+                    "commit_messages": commit_messages
+                })
+
+            elif etype == "PublicEvent":
+                action["detail"] = f"Made {repo_name} public"
+
+            events.append({
+                "id": ev.get("id"),
+                "created_at": created_at,
+                "action": action
+            })
+
+        return jsonify(events)
+
     except Exception as e:
+        print("⚠️ GitHub API error:", e)
         return jsonify({"error": str(e)}), 500
-
 
 # =====================================================
 # --- Google Calendar OAuth + API
