@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import dayjs from 'dayjs'
 import WeatherCol from './WeatherCol'
 import TasksCol from './TasksCol'
@@ -10,6 +10,8 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('all')
+  const [selectedCity, setSelectedCity] = useState('Berlin')
+
   const tabs = [
     { id: 'all', label: 'All' },
     { id: 'weather', label: 'Weather' },
@@ -17,6 +19,15 @@ export default function App() {
     { id: 'github', label: 'GitHub' },
     { id: 'ai', label: 'AI Assistant' },
   ]
+
+  useEffect(() => {
+    const savedCity = localStorage.getItem('selectedCity')
+    if (savedCity) setSelectedCity(savedCity)
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem('selectedCity', selectedCity)
+  }, [selectedCity])
 
   return (
     <div className="app-shell">
@@ -49,7 +60,7 @@ export default function App() {
               <h3>Weather</h3>
               <span className="pill tag-cyan">{dayjs().format('MMM D')}</span>
             </div>
-            <WeatherCol apiBase={API_BASE} />
+            <WeatherCol apiBase={API_BASE} city={selectedCity} onCityChange={setSelectedCity} />
           </div>
         )}
 
@@ -57,7 +68,6 @@ export default function App() {
           <div className="column tasks-col">
             <div className="row">
               <h3>Todos & Calendar</h3>
-              <span className="pill tag-green">today</span>
             </div>
             <TasksCol apiBase={API_BASE} />
           </div>
@@ -67,7 +77,6 @@ export default function App() {
           <div className="column github-col">
             <div className="row">
               <h3>GitHub</h3>
-              <span className="pill tag-rose">activity</span>
             </div>
             <GithubCol apiBase={API_BASE} />
           </div>

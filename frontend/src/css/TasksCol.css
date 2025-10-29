@@ -46,3 +46,29 @@
   color: #b0b0b0;
   font-size: 0.85rem;
 }
+.task-card.done strong {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.btn.small {
+  padding: 4px 8px;
+  font-size: 13px;
+}
+
+.btn.danger {
+  background: #d9534f;
+}
+
+.btn.danger:hover {
+  background: #b52b27;
+}
+
+.edit-input {
+  width: 100%;
+  background: #2c2c3e;
+  border: 1px solid #444;
+  color: white;
+  padding: 4px 6px;
+  border-radius: 6px;
+}

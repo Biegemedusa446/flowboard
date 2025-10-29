@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import '../css/AI.css'
+import '../css/App.css' // ensures consistent header styles
 
 export default function AiPage({ apiBase }) {
   const [messages, setMessages] = useState([
@@ -8,16 +10,19 @@ export default function AiPage({ apiBase }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [modal, setModal] = useState({ open: false, summary: '' })
-  const [eventDetails, setEventDetails] = useState({
-    date: '',
-    start: '',
-    end: '',
+  const [tasks, setTasks] = useState(() => {
+    const saved = localStorage.getItem('flowboard_tasks')
+    return saved ? JSON.parse(saved) : []
   })
   const chatEndRef = useRef(null)
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
+
+  useEffect(() => {
+    localStorage.setItem('flowboard_tasks', JSON.stringify(tasks))
+  }, [tasks])
 
   async function sendMessage() {
     if (!input.trim()) return
@@ -45,52 +50,20 @@ export default function AiPage({ apiBase }) {
     }
   }
 
+  // Instead of Calendar modal — local task adder
   function openAddModal(summary) {
-    const now = new Date()
-    const defaultDate = now.toISOString().split('T')[0]
-    const startTime = now.toTimeString().slice(0, 5)
-    const endTime = new Date(now.getTime() + 30 * 60000)
-      .toTimeString()
-      .slice(0, 5)
-
-    setEventDetails({
-      date: defaultDate,
-      start: startTime,
-      end: endTime,
-    })
     setModal({ open: true, summary })
   }
 
-  async function createCalendarEvent() {
-    const { summary } = modal
-    const { date, start, end } = eventDetails
-
-    if (!date || !start || !end) {
-      alert('Please select a date and time.')
-      return
+  function addLocalTask() {
+    const newTask = {
+      id: Date.now(),
+      text: modal.summary,
+      createdAt: new Date().toISOString(),
+      done: false,
     }
-
-    const startISO = new Date(`${date}T${start}`).toISOString()
-    const endISO = new Date(`${date}T${end}`).toISOString()
-
-    try {
-      const res = await fetch(`${apiBase}/api/calendar/add`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ summary, start: startISO, end: endISO }),
-      })
-      const json = await res.json()
-      if (json.success) {
-        alert(`✅ Added "${summary}" to your calendar`)
-      } else {
-        alert(`⚠️ Failed to add event: ${json.error || 'Unknown error'}`)
-      }
-    } catch {
-      alert('⚠️ Error adding event')
-    } finally {
-      setModal({ open: false, summary: '' })
-    }
+    setTasks(prev => [...prev, newTask])
+    setModal({ open: false, summary: '' })
   }
 
   function formatReply(text) {
@@ -107,10 +80,7 @@ export default function AiPage({ apiBase }) {
               <li key={idx}>
                 {cleanText}
                 {isAddable && (
-                  <button
-                    className="add-btn"
-                    onClick={() => openAddModal(cleanText)}
-                  >
+                  <button className="add-btn" onClick={() => openAddModal(cleanText)}>
                     + Add
                   </button>
                 )}
@@ -137,87 +107,85 @@ export default function AiPage({ apiBase }) {
   }
 
   return (
-    <div className="ai-container">
-      <div className="chat-box">
-        {messages.map((m, idx) => (
-          <div
-            key={idx}
-            className={`msg ${m.role} fade-in`}
-            style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start' }}
-          >
-            {m.role === 'ai' ? formatReply(m.text) : <div>{m.text}</div>}
-          </div>
-        ))}
+    <div className="ai-page">
+      {/* --- Header/Nav --- */}
+      <div className="topbar">
+        <div className="brand">Flowboard AI</div>
+        <div className="muted">Your personal productivity assistant</div>
+        <div className="tabs">
+          <Link to="/" className="tab">
+            ← Back to Dashboard
+          </Link>
+        </div>
+      </div>
 
-        {loading && (
-          <div className="msg ai typing">
-            <div className="dot"></div>
-            <div className="dot"></div>
-            <div className="dot"></div>
+      {/* --- Main AI Chat Section --- */}
+      <div className="ai-container">
+        <div className="chat-box">
+          {messages.map((m, idx) => (
+            <div
+              key={idx}
+              className={`msg ${m.role} fade-in`}
+              style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start' }}
+            >
+              {m.role === 'ai' ? formatReply(m.text) : <div>{m.text}</div>}
+            </div>
+          ))}
+
+          {loading && (
+            <div className="msg ai typing">
+              <div className="dot"></div>
+              <div className="dot"></div>
+              <div className="dot"></div>
+            </div>
+          )}
+
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* --- Chat Input --- */}
+        <div className="chat-input">
+          <input
+            type="text"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && sendMessage()}
+            placeholder="Type your message..."
+          />
+          <button onClick={sendMessage} disabled={loading}>
+            {loading ? '...' : 'Send'}
+          </button>
+        </div>
+
+        {/* --- Modal for adding task --- */}
+        {modal.open && (
+          <div className="modal-overlay">
+            <div className="modal">
+              <h3>Add Task</h3>
+              <p>{modal.summary}</p>
+
+              <div className="modal-buttons">
+                <button onClick={addLocalTask}>Save</button>
+                <button onClick={() => setModal({ open: false, summary: '' })}>
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
-        <div ref={chatEndRef} />
-      </div>
-
-      <div className="chat-input">
-        <input
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && sendMessage()}
-          placeholder="Type your message..."
-        />
-        <button onClick={sendMessage} disabled={loading}>
-          {loading ? '...' : 'Send'}
-        </button>
-      </div>
-
-      {modal.open && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h3>Add to Calendar</h3>
-            <p>{modal.summary}</p>
-            <label>
-              Date:
-              <input
-                type="date"
-                value={eventDetails.date}
-                onChange={e =>
-                  setEventDetails({ ...eventDetails, date: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Start time:
-              <input
-                type="time"
-                value={eventDetails.start}
-                onChange={e =>
-                  setEventDetails({ ...eventDetails, start: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              End time:
-              <input
-                type="time"
-                value={eventDetails.end}
-                onChange={e =>
-                  setEventDetails({ ...eventDetails, end: e.target.value })
-                }
-              />
-            </label>
-
-            <div className="modal-buttons">
-              <button onClick={createCalendarEvent}>Save</button>
-              <button onClick={() => setModal({ open: false, summary: '' })}>
-                Cancel
-              </button>
-            </div>
+        {/* --- Local task list preview --- */}
+        {tasks.length > 0 && (
+          <div className="task-preview">
+            <h4>Your Tasks</h4>
+            {tasks.map(t => (
+              <div key={t.id} className="task-item">
+                <span>{t.text}</span>
+              </div>
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }

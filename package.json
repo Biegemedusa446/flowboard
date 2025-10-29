@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "country-state-city": "^3.2.1",
+    "papaparse": "^5.5.3",
+    "react-select": "^5.10.2",
+    "react-select-async-paginate": "^0.7.11"
+  }
+}
