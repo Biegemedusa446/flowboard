@@ -8,6 +8,9 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from dotenv import load_dotenv
+from collections import defaultdict
+from datetime import datetime, timedelta
+
 
 # =====================================================
 # --- Load environment variables ---
@@ -152,47 +155,68 @@ def github_events():
         response.raise_for_status()
         data = response.json()
 
+        grouped_pushes = defaultdict(lambda: {"commits": [], "last_time": None})
         events = []
-        for ev in data[:10]:
+
+        for ev in data[:15]:
             etype = ev.get("type")
             repo_name = ev.get("repo", {}).get("name", "Unknown repo")
             created_at = ev.get("created_at")
             payload = ev.get("payload", {})
 
-            action = {"type": etype, "repo": repo_name}
-
-            # --- Handle PushEvent with commit details ---
+            # --- Handle PushEvent grouping ---
             if etype == "PushEvent":
                 branch = payload.get("ref", "").replace("refs/heads/", "")
                 commits = payload.get("commits", [])
                 commit_messages = [c.get("message", "") for c in commits]
 
-                # If GitHub trimmed commits, fetch latest commits for that branch
+                # Fetch commit messages if missing
                 if not commit_messages and repo_name and branch:
                     try:
                         commits_url = f"https://api.github.com/repos/{repo_name}/commits?sha={branch}&per_page=3"
                         commits_res = requests.get(commits_url, headers=headers)
                         commits_res.raise_for_status()
-                        commits_data = commits_res.json()
-                        commit_messages = [c["commit"]["message"] for c in commits_data[:3]]
+                        commit_messages = [
+                            c["commit"]["message"] for c in commits_res.json()[:3]
+                        ]
                     except Exception as fetch_err:
                         print(f"⚠️ Could not fetch commits for {repo_name}/{branch}: {fetch_err}")
 
-                action.update({
-                    "branch": branch,
-                    "commit_count": len(commit_messages),
-                    "commit_messages": commit_messages
+                key = f"{repo_name}:{branch}"
+                grouped_pushes[key]["commits"].extend(commit_messages)
+                grouped_pushes[key]["last_time"] = created_at
+                continue
+
+            # --- Non-push events stay as-is ---
+            if etype == "PublicEvent":
+                events.append({
+                    "id": ev.get("id"),
+                    "created_at": created_at,
+                    "action": {
+                        "type": "PublicEvent",
+                        "repo": repo_name,
+                        "detail": f"Made {repo_name} public",
+                    }
                 })
 
-            elif etype == "PublicEvent":
-                action["detail"] = f"Made {repo_name} public"
-
+        # Convert grouped push events to single entries
+        for key, value in grouped_pushes.items():
+            repo_name, branch = key.split(":")
+            unique_commits = list(dict.fromkeys(value["commits"]))  # remove dupes
             events.append({
-                "id": ev.get("id"),
-                "created_at": created_at,
-                "action": action
+                "id": f"grouped-{key}",
+                "created_at": value["last_time"],
+                "action": {
+                    "type": "PushEvent",
+                    "repo": repo_name,
+                    "branch": branch,
+                    "commit_count": len(unique_commits),
+                    "commit_messages": unique_commits[:5],
+                }
             })
 
+        # Sort newest first
+        events.sort(key=lambda e: e.get("created_at", ""), reverse=True)
         return jsonify(events)
 
     except Exception as e:
