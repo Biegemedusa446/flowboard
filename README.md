@@ -2,8 +2,6 @@
 
 This repository contains the configuration and setup for an **AI-driven productivity dashboard** built with **React (Vite)** and **Flask**. It integrates multiple APIs — including **Google Gemini**, **Google Calendar**, **GitHub**, and **Visual Crossing Weather** — into a unified personal productivity tool.  
 
-The project also supports **automated deployment** via **GitHub Actions** and **Netlify Build Hooks**, providing continuous integration and delivery (CI/CD).  
-
 ---
 
 <details>
@@ -17,7 +15,6 @@ The project also supports **automated deployment** via **GitHub Actions** and **
 - 🗓 **Google Calendar Integration:** View and create events directly from the dashboard.  
 - 💻 **GitHub Activity Feed:** Displays your recent commits, PRs, and issue events.  
 - 🧩 **Unified UI:** React-based interface with dynamic, interactive columns.  
-- 🚀 **Automated Deployment:** CI/CD pipeline through GitHub Actions and Netlify.  
 
 ### 🏗 Architecture  
 | Layer | Technology | Purpose |
@@ -34,9 +31,9 @@ The project also supports **automated deployment** via **GitHub Actions** and **
 <details>
 <summary><strong>🔐 Security Considerations</strong></summary>  
 
-- All sensitive credentials (e.g., `GEMINI_API_KEY`, `WEATHER_API_KEY`, `GITHUB_TOKEN`, `GOOGLE_CLIENT_ID`, `NETLIFY_AUTH_TOKEN`) are securely stored as **GitHub Secrets** and **environment variables**.  
+- All sensitive credentials (e.g., `GEMINI_API_KEY`, `WEATHER_API_KEY`, `GITHUB_TOKEN`, `GOOGLE_CLIENT_ID`) are securely stored as **GitHub Secrets** and **environment variables**.  
 - The `.env` and `credentials.json` files are explicitly excluded via `.gitignore`.  
-- CORS is restricted to `http://localhost:5173` for development, and Netlify domain in production.  
+- CORS is restricted to `http://localhost:5173` for development
 
 </details>  
 
@@ -95,7 +92,6 @@ The project also supports **automated deployment** via **GitHub Actions** and **
 
 - The system relies on third-party APIs (Gemini, Netlify, Google Calendar, Visual Crossing) which may experience rate limits or temporary downtime.  
 - Google Calendar OAuth requires manual consent for first-time users.  
-- Free Netlify tier has limited build minutes per month.  
 
 </details>  
 
