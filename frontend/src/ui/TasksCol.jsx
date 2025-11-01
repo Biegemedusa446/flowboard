@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
 import utc from 'dayjs/plugin/utc'
 import timezone from 'dayjs/plugin/timezone'
-import { Check, Edit3, Trash2, Plus, Calendar } from 'lucide-react'
+import { Check, Edit3, Trash2, Plus, Calendar, LogIn } from 'lucide-react'
 import '../css/TasksCol.css'
 
 dayjs.extend(utc)
@@ -117,10 +117,19 @@ export default function TasksCol({ apiBase }) {
           <h3>Todos & Calendar</h3>
         </div>
 
-        {auth && (
+        {/* Show Add (+) button if authenticated, else Login button */}
+        {auth ? (
           <button className="icon-btn" onClick={() => openAddModal()} title="Add Task">
             <Plus size={18} strokeWidth={2.3} />
           </button>
+        ) : (
+          <a
+            href={`${apiBase}/login/google`}
+            className="icon-btn login-btn"
+            title="Login with Google"
+          >
+            <LogIn size={18} strokeWidth={2.3} />
+          </a>
         )}
       </div>
 
@@ -137,11 +146,7 @@ export default function TasksCol({ apiBase }) {
 
               {item.type === 'task' && (
                 <div className="task-actions">
-                  <button
-                    className="icon-btn"
-                    onClick={() => toggleDone(item.id)}
-                    title="Mark done"
-                  >
+                  <button className="icon-btn" onClick={() => toggleDone(item.id)} title="Mark done">
                     <Check size={18} strokeWidth={2.3} />
                   </button>
                   <button className="icon-btn" onClick={() => openAddModal(item)} title="Edit task">
@@ -164,6 +169,7 @@ export default function TasksCol({ apiBase }) {
           </div>
         ))}
       </div>
+
       {modal && (
         <div className="modal-overlay">
           <div className="modal pop-in">
