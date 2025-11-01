@@ -1,9 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react'
 import dayjs from 'dayjs'
 import Papa from 'papaparse'
-import { FaSun, FaCloud, FaCloudRain, FaSnowflake, FaMoon } from 'react-icons/fa'
+import { Sun, Cloud, CloudRain, Snowflake, Moon, CloudSun, CloudMoon, Search } from 'lucide-react'
 import '../css/WeatherCol.css'
-import nightRain from '../assets/icons/weather-rain-showers-night.svg'
 
 export default function WeatherCol({ apiBase, city, onCityChange }) {
   const [data, setData] = useState(null)
@@ -15,13 +14,11 @@ export default function WeatherCol({ apiBase, city, onCityChange }) {
   const inputRef = useRef(null)
   const worldCitiesCSV = '/worldcities.csv'
 
-
   useEffect(() => {
     Papa.parse(worldCitiesCSV, {
       download: true,
       header: true,
       complete: results => {
-        console.log('✅ Parsed CSV:', results.data.slice(0, 5))
         const names = results.data.map(row => row.city?.trim()).filter(Boolean)
         setCityList(names)
       },
@@ -104,25 +101,24 @@ export default function WeatherCol({ apiBase, city, onCityChange }) {
 
     if (isHourly) {
       if (night) {
-        if (isRain) return <FaCloudRain className="icon rain" />
-        if (isSnow) return <FaSnowflake className="icon snow" />
-        if (isCloudy) return <img src={nightRain} alt="Night cloud" className="icon svg" />
-        if (isClear) return <FaMoon className="icon night" />
+        if (isRain) return <CloudRain className="icon rain" />
+        if (isSnow) return <Snowflake className="icon snow" />
+        if (isCloudy) return <CloudMoon className="icon cloud" />
+        if (isClear) return <Moon className="icon night" />
       } else {
-        if (isClear) return <FaSun className="icon sun" />
-        if (isCloudy) return <FaCloud className="icon cloud" />
-        if (isRain) return <FaCloudRain className="icon rain" />
-        if (isSnow) return <FaSnowflake className="icon snow" />
+        if (isClear) return <Sun className="icon sun" />
+        if (isCloudy) return <CloudSun className="icon cloud" />
+        if (isRain) return <CloudRain className="icon rain" />
+        if (isSnow) return <Snowflake className="icon snow" />
       }
     }
-    if (isClear) return <FaSun className="icon sun" />
-    if (isCloudy) return <FaCloud className="icon cloud" />
-    if (isRain) return <FaCloudRain className="icon rain" />
-    if (isSnow) return <FaSnowflake className="icon snow" />
-    return <FaCloud className="icon cloud" />
+    if (isClear) return <Sun className="icon sun" />
+    if (isCloudy) return <Cloud className="icon cloud" />
+    if (isRain) return <CloudRain className="icon rain" />
+    if (isSnow) return <Snowflake className="icon snow" />
+    return <Cloud className="icon cloud" />
   }
 
-  // --- City search/filter logic using CSV ---
   const filteredCities = cityList
     .filter(
       c => c.toLowerCase().includes(query.toLowerCase()) && c.toLowerCase() !== city.toLowerCase()
@@ -151,21 +147,23 @@ export default function WeatherCol({ apiBase, city, onCityChange }) {
 
   return (
     <div>
-      {/* City selector */}
       <div className="city-selector">
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Search city..."
-          value={query}
-          onChange={e => {
-            setQuery(e.target.value)
-            setShowSuggestions(true)
-          }}
-          onFocus={() => setShowSuggestions(true)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
-          className="city-input"
-        />
+        <div className="city-input-wrapper">
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Search city..."
+            value={query}
+            onChange={e => {
+              setQuery(e.target.value)
+              setShowSuggestions(true)
+            }}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
+            className="city-input"
+          />
+          <Search className="city-search-icon" size={18} strokeWidth={2.2} />
+        </div>
 
         {showSuggestions && filteredCities.length > 0 && (
           <div className="suggestions">
@@ -178,7 +176,6 @@ export default function WeatherCol({ apiBase, city, onCityChange }) {
         )}
       </div>
 
-      {/* Forecast range buttons */}
       <div className="row" style={{ marginBottom: 12, gap: 8 }}>
         {[1, 7, 15].map(n => (
           <button
@@ -191,12 +188,10 @@ export default function WeatherCol({ apiBase, city, onCityChange }) {
         ))}
       </div>
 
-      {/* Weather list */}
       <div className="weather-container">
         {days === 1
           ? data.days[0]?.hours
               ?.filter(h => {
-                // ⏰ Only show hours after current time
                 let parsed = dayjs(`${data.days[0].date} ${h.time}`, [
                   'YYYY-MM-DD HH:mm:ss',
                   'YYYY-MM-DDTHH:mm',

@@ -17,7 +17,6 @@ from datetime import datetime, timedelta
 # =====================================================
 load_dotenv()
 
-# --- Flask App Setup ---
 app = Flask(__name__)
 CORS(
     app,
@@ -39,14 +38,14 @@ GOOGLE_SCOPES = os.getenv("GOOGLE_SCOPES", "https://www.googleapis.com/auth/cale
 
 # --- Validate credentials path ---
 if not os.path.exists(CLIENT_SECRETS_FILE):
-    print(f"⚠️ WARNING: Google credentials file not found at '{CLIENT_SECRETS_FILE}'")
+    print(f"WARNING: Google credentials file not found at '{CLIENT_SECRETS_FILE}'")
 if not GEMINI_API_KEY:
-    print("⚠️ WARNING: GEMINI_API_KEY missing from environment.")
+    print("WARNING: GEMINI_API_KEY missing from environment.")
 if not WEATHER_API_KEY:
-    print("⚠️ WARNING: WEATHER_API_KEY missing from environment.")
+    print("WARNING: WEATHER_API_KEY missing from environment.")
 
 # =====================================================
-# --- Gemini Chat Endpoint with Retry Logic
+# --- Gemini Chat Endpoint
 # =====================================================
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -66,7 +65,6 @@ def chat():
         "X-goog-api-key": GEMINI_API_KEY
     }
 
-    # --- Updated system prompt ---
     system_prompt = (
         "You are Flowboard AI, a concise productivity/chat assistant. "
         "Always reply in short, clear sentences or bullet points. "
@@ -98,9 +96,9 @@ def chat():
                 time.sleep(2 ** attempt)
                 continue
             elif status_code == 401:
-                return jsonify({"reply": "🔒 Invalid or expired Gemini API key."}), 401
+                return jsonify({"reply": "Invalid or expired Gemini API key."}), 401
             else:
-                return jsonify({"reply": "⚠️ The AI service is currently unavailable. Please try again later."}), 503
+                return jsonify({"reply": "The AI service is currently unavailable. Please try again later."}), 503
     else:
         return jsonify({"reply": "Sorry, I'm having trouble connecting to the AI service. Try again soon!"}), 500
 
@@ -170,14 +168,14 @@ def github_events():
                 commits = payload.get("commits", [])
                 commit_messages = [c.get("message", "") for c in commits]
 
-                # Fetch commit messages if missing
+                # Fetch commit messages
                 if not commit_messages and repo_name and branch:
                     try:
-                        commits_url = f"https://api.github.com/repos/{repo_name}/commits?sha={branch}&per_page=3"
+                        commits_url = f"https://api.github.com/repos/{repo_name}/commits?sha={branch}&per_page=20"
                         commits_res = requests.get(commits_url, headers=headers)
                         commits_res.raise_for_status()
                         commit_messages = [
-                            c["commit"]["message"] for c in commits_res.json()[:3]
+                            c["commit"]["message"] for c in commits_res.json()[:20]
                         ]
                     except Exception as fetch_err:
                         print(f"⚠️ Could not fetch commits for {repo_name}/{branch}: {fetch_err}")
@@ -211,7 +209,7 @@ def github_events():
                     "repo": repo_name,
                     "branch": branch,
                     "commit_count": len(unique_commits),
-                    "commit_messages": unique_commits[:5],
+                    "commit_messages": unique_commits[:20],
                 }
             })
 
@@ -226,7 +224,7 @@ def github_events():
 # =====================================================
 # --- Google Calendar OAuth + API
 # =====================================================
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # allow HTTP in dev
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 @app.route("/login/google")
 def login_google():

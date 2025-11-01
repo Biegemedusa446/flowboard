@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import '../css/AI.css'
-import '../css/App.css' // ensures consistent header styles
+import '../css/App.css'
 
 export default function AiPage({ apiBase }) {
   const [messages, setMessages] = useState([
@@ -10,19 +10,11 @@ export default function AiPage({ apiBase }) {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [modal, setModal] = useState({ open: false, summary: '' })
-  const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem('flowboard_tasks')
-    return saved ? JSON.parse(saved) : []
-  })
   const chatEndRef = useRef(null)
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
-
-  useEffect(() => {
-    localStorage.setItem('flowboard_tasks', JSON.stringify(tasks))
-  }, [tasks])
 
   async function sendMessage() {
     if (!input.trim()) return
@@ -50,7 +42,6 @@ export default function AiPage({ apiBase }) {
     }
   }
 
-  // Instead of Calendar modal — local task adder
   function openAddModal(summary) {
     setModal({ open: true, summary })
   }
@@ -61,8 +52,14 @@ export default function AiPage({ apiBase }) {
       text: modal.summary,
       createdAt: new Date().toISOString(),
       done: false,
+      type: 'task',
     }
-    setTasks(prev => [...prev, newTask])
+
+    const current = JSON.parse(localStorage.getItem('flowboard_tasks') || '[]')
+    const updated = [...current, newTask]
+    localStorage.setItem('flowboard_tasks', JSON.stringify(updated))
+    window.dispatchEvent(new Event('tasks-updated'))
+
     setModal({ open: false, summary: '' })
   }
 
@@ -108,10 +105,12 @@ export default function AiPage({ apiBase }) {
 
   return (
     <div className="ai-page">
-      {/* --- Header/Nav --- */}
       <div className="topbar">
-        <div className="brand">Flowboard AI</div>
-        <div className="muted">Your personal productivity assistant</div>
+        <div className="topbar-left">
+          <div className="brand">Flowboard AI</div>
+          <div className="muted">Your personal productivity assistant</div>
+        </div>
+
         <div className="tabs">
           <Link to="/" className="tab">
             ← Back to Dashboard
@@ -119,13 +118,12 @@ export default function AiPage({ apiBase }) {
         </div>
       </div>
 
-      {/* --- Main AI Chat Section --- */}
       <div className="ai-container">
         <div className="chat-box">
           {messages.map((m, idx) => (
             <div
               key={idx}
-              className={`msg ${m.role} fade-in`}
+              className={`msg ${m.role}${loading && idx === messages.length - 1 ? ' loading' : ''}`}
               style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start' }}
             >
               {m.role === 'ai' ? formatReply(m.text) : <div>{m.text}</div>}
@@ -133,7 +131,7 @@ export default function AiPage({ apiBase }) {
           ))}
 
           {loading && (
-            <div className="msg ai typing">
+            <div className="msg ai typing" style={{ alignSelf: 'flex-start' }}>
               <div className="dot"></div>
               <div className="dot"></div>
               <div className="dot"></div>
@@ -143,21 +141,19 @@ export default function AiPage({ apiBase }) {
           <div ref={chatEndRef} />
         </div>
 
-        {/* --- Chat Input --- */}
         <div className="chat-input">
           <input
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && sendMessage()}
-            placeholder="Type your message..."
+            placeholder="Ask anything, or tell me what to plan..."
           />
           <button onClick={sendMessage} disabled={loading}>
             {loading ? '...' : 'Send'}
           </button>
         </div>
 
-        {/* --- Modal for adding task --- */}
         {modal.open && (
           <div className="modal-overlay">
             <div className="modal">
@@ -166,23 +162,9 @@ export default function AiPage({ apiBase }) {
 
               <div className="modal-buttons">
                 <button onClick={addLocalTask}>Save</button>
-                <button onClick={() => setModal({ open: false, summary: '' })}>
-                  Cancel
-                </button>
+                <button onClick={() => setModal({ open: false, summary: '' })}>Cancel</button>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* --- Local task list preview --- */}
-        {tasks.length > 0 && (
-          <div className="task-preview">
-            <h4>Your Tasks</h4>
-            {tasks.map(t => (
-              <div key={t.id} className="task-item">
-                <span>{t.text}</span>
-              </div>
-            ))}
           </div>
         )}
       </div>
