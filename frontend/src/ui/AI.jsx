@@ -64,20 +64,55 @@ export default function AiPage({ apiBase }) {
   }
 
   function formatReply(text) {
-    const lines = text.split(/[-•]\s+/).filter(l => l.trim() !== '')
-    const ADD_MARKER = '§add'
+    const ADD = '§add'
+    const tasks = []
+    text.replace(/([^§]+?)\s*§add/gi, (_, raw) => {
+      const cleaned = String(raw)
+        .replace(/^[\s*\-•]+/, '')
+        .replace(/[.\s,;:]+$/g, '')
+        .trim()
+      if (cleaned) tasks.push(cleaned)
+      return ''
+    })
+
+    if (tasks.length) {
+      return (
+        <ul className="ai-list">
+          {tasks.map((t, idx) => (
+            <li key={idx}>
+              {t}
+              <button className="add-btn" onClick={() => openAddModal(t)}>
+                + Add
+              </button>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    const lines = text
+      .split(/\n+/)
+      .flatMap(line =>
+        line
+          .split(/(?:^|\s)[\-*•]\s+/g)
+          .map(s => s.trim())
+      )
+      .filter(Boolean)
 
     if (lines.length > 1) {
       return (
         <ul className="ai-list">
           {lines.map((line, idx) => {
-            const isAddable = line.trim().endsWith(ADD_MARKER)
-            const cleanText = line.replace(ADD_MARKER, '').trim()
+            const isAddable = /§add\s*$/i.test(line)
+            const clean = line
+              .replace(/§add\s*$/i, '')
+              .replace(/^[\-\*•]\s*/, '')
+              .replace(/[.\s,;:]+$/g, '')
+              .trim()
             return (
               <li key={idx}>
-                {cleanText}
+                {clean}
                 {isAddable && (
-                  <button className="add-btn" onClick={() => openAddModal(cleanText)}>
+                  <button className="add-btn" onClick={() => openAddModal(clean)}>
                     + Add
                   </button>
                 )}
@@ -88,9 +123,9 @@ export default function AiPage({ apiBase }) {
       )
     }
 
-    const isAddable = text.trim().endsWith(ADD_MARKER)
-    const cleanText = text.replace(ADD_MARKER, '').trim()
-
+    // 3) Plain text (no tasks detected)
+    const isAddable = /§add\s*$/i.test(text)
+    const cleanText = text.replace(/§add\s*$/i, '').trim()
     return (
       <div>
         {cleanText}
@@ -105,16 +140,14 @@ export default function AiPage({ apiBase }) {
 
   return (
     <div className="ai-page">
+      {/* Top bar */}
       <div className="topbar">
         <div className="topbar-left">
           <div className="brand">Flowboard AI</div>
           <div className="muted">Your personal productivity assistant</div>
         </div>
-
         <div className="tabs">
-          <Link to="/" className="tab">
-            ← Back to Dashboard
-          </Link>
+          <Link to="/" className="tab">← Back to Dashboard</Link>
         </div>
       </div>
 
@@ -141,6 +174,7 @@ export default function AiPage({ apiBase }) {
           <div ref={chatEndRef} />
         </div>
 
+        {/* Input */}
         <div className="chat-input">
           <input
             type="text"
@@ -154,12 +188,12 @@ export default function AiPage({ apiBase }) {
           </button>
         </div>
 
+        {/* Add Task Modal */}
         {modal.open && (
           <div className="modal-overlay">
             <div className="modal">
               <h3>Add Task</h3>
               <p>{modal.summary}</p>
-
               <div className="modal-buttons">
                 <button onClick={addLocalTask}>Save</button>
                 <button onClick={() => setModal({ open: false, summary: '' })}>Cancel</button>

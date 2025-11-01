@@ -190,3 +190,31 @@
     transform: translateY(0);
   }
 }
+/* === Done State Styling === */
+.task-card.done {
+  opacity: 0.7;
+  background: linear-gradient(160deg, rgba(25, 25, 35, 0.7), rgba(20, 20, 30, 0.8));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+              0 0 0 transparent;
+  transform: none;
+}
+
+.task-card.done strong {
+  text-decoration: line-through;
+  color: rgba(200, 200, 200, 0.65);
+}
+
+.task-card.done .muted {
+  color: rgba(170, 170, 170, 0.4);
+}
+
+/* optional: make the check icon glow briefly when toggled */
+.task-card.done .icon-btn {
+  color: #6eff8b;
+  background: rgba(110, 255, 139, 0.08);
+}
+
+.task-card.done .icon-btn:hover {
+  background: rgba(110, 255, 139, 0.15);
+  transform: scale(1.1);
+}
